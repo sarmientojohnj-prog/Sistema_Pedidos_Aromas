@@ -17,6 +17,8 @@ public class RegistroServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+
+                System.out.println(">>> ¡ESTE ES EL CÓDIGO NUEVO! <<<");
         
         // 1. Recuperar los datos del formulario HTML
         String nombre = request.getParameter("nombre");
@@ -25,9 +27,10 @@ public class RegistroServlet extends HttpServlet {
         String direccion = request.getParameter("direccion");
         String telefono = request.getParameter("telefono");
         String email = request.getParameter("email");
+        String contrasena = request.getParameter ("contrasena");
        
         // 2. Usar el servicio que ya se tenia para guardar en MySQL
-        int idGenerado = clienteService.agregarCliente(nombre, apellidos, identificacion, direccion, telefono, email);
+        int idGenerado = clienteService.agregarCliente(nombre, apellidos, identificacion, direccion, telefono, email, contrasena);
 
         // 4. Responder al navegador
         response.setContentType("text/html;charset=UTF-8");

@@ -17,7 +17,7 @@ public class PedidoService {
     public int crearPedido(int clienteId) {
         try (Connection con = ConexionDB.getConnection()) {
 
-            // se verificamos si el cliente existe antes de abrirle un pedido
+            // se verifica si el cliente existe antes de abrirle un pedido
             PreparedStatement psCliente = con.prepareStatement(
                 "SELECT * FROM cliente WHERE Id_Cliente = ?");
             psCliente.setInt(1, clienteId);
@@ -35,7 +35,7 @@ public class PedidoService {
             ps.setInt(1, clienteId);              // Id_Cliente_FK
             ps.setString(2, "En local");       // Tipo_Entrega
             ps.setString(3, "Sin notas");      // Notas_Cliente
-            ps.setDouble(4, 0.0);              // Total
+            ps.setInt(4, 0);                   // Total
             ps.setString(5, "En preparacion"); // Estado_Pedido
 
             ps.executeUpdate();
@@ -68,10 +68,15 @@ public class PedidoService {
             // Se recorren los resultados de la consulta y se almacenan en la colección "lista" 
             // convirtiendo cada fila en un objeto de tipo "Pedido".
             while(rs.next()) {
-                Pedido p = new Pedido();                        // Se crea una nueva instancia del objeto Pedido
-                p.setId(rs.getInt("id"));           // Se asigna el valor de la columna 'id' al objeto
-                p.setClienteId(rs.getInt("cliente_id"));            // Se asigna el ID del cliente al objeto
-                lista.add(p);                                                   // Se agrega el objeto configurado a la lista general
+                Pedido p = new Pedido();                                            // Se crea una nueva instancia del objeto Pedido
+                p.setId_Pedido(rs.getInt("Id_Pedido"));                 // Se asigna el valor de la columna 'id' al objeto
+                p.setId_Cliente_FK(rs.getInt("Id_Cliente_FK"));  // Se asigna el ID del cliente al objeto
+                p.setFecha_Hora_Pedido(rs.getString("Fecha_Hora_Pedido"));
+                p.setTipo_Entrega(rs.getString("Tipo_Entrega"));
+                p.setNotas_Cliente(rs.getString("Notas_Cliente"));
+                p.setTotal(rs.getInt("Total"));
+                p.setEstado_Pedido(rs.getString("Estado_Pedido"));
+                lista.add(p);                                                       // Se agrega el objeto configurado a la lista general
 
                 
             }
@@ -85,24 +90,23 @@ public class PedidoService {
 
 
     // ACTUALIZAR PEDIDO
-    public boolean actualizarProducto(int id, String nombre, double precio, int stock) {
+    public boolean actualizarPedido(int idPedido, int nuevoTotal, String nuevoEstado) {
 
         try (Connection con = ConexionDB.getConnection()) {
 
-            String sql = "UPDATE productos SET Nombre=?, Precio=?, Disponibilidad=? WHERE Id_Producto=?";
+            String sql = "UPDATE pedidos SET Total=?, Estado_Pedido=? WHERE Id_Pedido=?";
             PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, nombre);
-            ps.setDouble(2, precio);
-            ps.setInt(3, stock);
-            ps.setInt(4, id);
+            ps.setInt(1, nuevoTotal);
+            ps.setString(2, nuevoEstado);
+            ps.setInt(3, idPedido);
 
             int filas = ps.executeUpdate();
 
             if(filas > 0) {
-                System.out.println("✏ Producto actualizado: " + nombre + " ahora cuesta $" + precio);
+                System.out.println("Pedido #" + idPedido + " Actualizado con éxito.");
                 return true;
             } else {
-            System.out.println("⚠️ No se encontró el producto con ID: " + id);
+            System.out.println("⚠️ No se encontró el producto con ID: " + idPedido);
             return false;
         }
 
@@ -158,11 +162,11 @@ public class PedidoService {
                 return false;
             }
 
-            int stock = rs.getInt("Disponibilidad");
-            double precio = rs.getDouble("Precio");
+            int stockActual = rs.getInt("Disponibilidad");
+            int precioUnitario = rs.getInt("Precio");
 
-            if(cantidad <= 0 || cantidad > stock) {
-                System.out.println("❌ Cantidad inválida o stock insuficiente");
+            if(cantidad <= 0 || cantidad > stockActual) {
+                System.out.println("❌ Cantidad inválida o stock insuficiente, quedan" + stockActual);
                 return false;
             }
 
@@ -172,16 +176,16 @@ public class PedidoService {
             ps.setInt(1, pedidoId);
             ps.setInt(2, productoId);
             ps.setInt(3, cantidad);
-            ps.setDouble(4, cantidad * precio);         // Se calcula el subtotal de la línea.
+            ps.setInt(4, cantidad * precioUnitario);         // Se calcula el subtotal de la línea.
             ps.executeUpdate();
 
             
             // Paso 4: Se descuenta la cantidad vendida de la columna Disponibilidad en la tabla productos.
-            PreparedStatement psUpdate = con.prepareStatement(
-                "UPDATE productos SET Disponibilidad = Disponibilidad - ? WHERE id_Producto = ?");
-            psUpdate.setInt(1, cantidad);
-            psUpdate.setInt(2, productoId);
-            psUpdate.executeUpdate();
+            PreparedStatement psUpdateStock = con.prepareStatement(
+                "UPDATE productos SET Disponibilidad = Disponibilidad - ? WHERE Id_Producto = ?");
+            psUpdateStock.setInt(1, cantidad);
+            psUpdateStock.setInt(2, productoId);
+            psUpdateStock.executeUpdate();
 
             System.out.println("✅ Detalle agregado correctamente");
             return true;

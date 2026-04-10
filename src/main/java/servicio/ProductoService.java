@@ -46,7 +46,7 @@ public class ProductoService {
                 p.setId(rs.getInt("Id_Producto"));
                 p.setNombre(rs.getString("Nombre"));
                 p.setPrecio(rs.getDouble("Precio"));
-                p.setStock(rs.getInt("Disponibilidad"));
+                p.setCantidad(rs.getInt("cantidad"));
                 lista.add(p);
             }
 
