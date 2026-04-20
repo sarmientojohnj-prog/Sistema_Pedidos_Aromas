@@ -146,4 +146,116 @@ public class ClienteService {
         } catch (SQLException e) { e.printStackTrace(); }
         return false;
     }
+
+    public String obtenerNombrePorEmail(String email) {
+    String nombre = "Usuario"; 
+    // Esta consulta une la tabla persona con usuario para traer el nombre real
+    String sql = "SELECT p.Nombre FROM persona p " +
+                 "JOIN usuario u ON p.IdPersona = u.Id_Persona_FK " +
+                 "WHERE u.Nombre_Usuario = ?";
+                 
+    try (Connection con = ConexionDB.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+        
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        
+        if (rs.next()) {
+            nombre = rs.getString("Nombre"); // Aquí saca el nombre 'jas' o 'John'
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return nombre; // Devuelve el nombre al Servlet
+}
+
+
+    public Cliente obtenerDatosCompletosPorEmail(String email) {
+        Cliente c = null;
+        String sql = "SELECT p.* FROM persona p " +
+                     "JOIN usuario u ON p.IdPersona = u.Id_Persona_FK " +
+                     "WHERE u.Nombre_Usuario = ?";
+                     
+        try (Connection con = ConexionDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                c = new Cliente();
+                c.setId(rs.getInt("IdPersona"));
+                c.setNombre(rs.getString("Nombre"));
+                c.setApellidos(rs.getString("Apellidos"));
+                c.setIdentificacion(rs.getString("Identificacion"));
+                c.setDireccion(rs.getString("Direccion"));
+                c.setTelefono(rs.getString("Telefono"));
+                c.setEmail(rs.getString("Correo_Electronico"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return c;
+    }
+
+    public boolean actualizarPerfilCompleto(int id, String nombre, String apellidos, String direccion, String telefono, String email) {
+    String sql = "UPDATE persona SET Nombre=?, Apellidos=?, Direccion=?, Telefono=?, Correo_Electronico=? WHERE IdPersona=?";
+    try (Connection con = ConexionDB.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql)) {
+        ps.setString(1, nombre);
+        ps.setString(2, apellidos);
+        ps.setString(3, direccion);
+        ps.setString(4, telefono);
+        ps.setString(5, email);
+        ps.setInt(6, id);
+        return ps.executeUpdate() > 0;
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+public String obtenerRolPorEmail(String email) {
+    String rol = "Cliente"; // Por defecto, si algo falla, lo tratamos como cliente
+    String sql = "SELECT Rol FROM usuario WHERE Nombre_Usuario = ?"; 
+    
+    // Usamos Nombre_Usuario porque en tu imagen veo que es la llave para el login
+    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/aromas_duo", "root", "");
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        
+        if (rs.next()) {
+            rol = rs.getString("Rol");
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return rol;
+}
+
+public int obtenerIdPorEmail(String email) {
+    int id = 0;
+    // Buscamos directamente en la tabla usuario
+    String sql = "SELECT Id_Usuario FROM usuario WHERE Nombre_Usuario = ?"; 
+    
+    try (Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/aromas_duo", "root", "");
+         PreparedStatement ps = con.prepareStatement(sql)) {
+        
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        
+        if (rs.next()) {
+            // Sacamos el ID de la columna real de la tabla usuario
+            id = rs.getInt("Id_Usuario"); 
+        }
+        // No hace falta cerrar con.close() porque el try() lo hace solo
+    } catch (Exception e) {
+        System.out.println("Error al obtener Id_Usuario: " + e.getMessage());
+    }
+    return id; 
+}
+
+
 }

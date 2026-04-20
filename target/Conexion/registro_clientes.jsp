@@ -70,13 +70,22 @@
             </div>
         </div>
     </div>
-    <div class="container text-center mt-4 pb-5"> 
-        <hr>
-        <p class="text-muted">Panel de Gestión Interna</p>
-        <div class="d-flex justify-content-center gap-2">
-            <a href="./PedidoServlet" class="btn btn-dark shadow-sm">Gestionar Pedidos</a>
-            <a href="nuevo_pedido.jsp" class="btn btn-warning shadow-sm"> + Tomar Nuevo Pedido</a>
-        </div>
-    </div>
-</body>
+
+    <%
+    // 1. Detectamos quién está registrando al cliente
+    String rolParaVolver = (String) session.getAttribute("rol");
+    String destino = "index.jsp"; // Por si acaso algo falla
+
+    if ("Administrativo".equals(rolParaVolver)) {
+        destino = "admin_principal.jsp";
+    } else if ("Operativo".equals(rolParaVolver)) {
+        destino = "operativo_principal.jsp";
+    }
+%>
+
+<a href="<%= destino %>" style="text-decoration: none; background-color: #64748b; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;">
+    ⬅ Cancelar y Volver
+</a>
+
+    </body>
 </html>

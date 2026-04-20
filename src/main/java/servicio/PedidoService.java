@@ -57,36 +57,42 @@ public class PedidoService {
 
     // LISTAR PEDIDOS
     public ArrayList<Pedido> listarPedidos() {
-        ArrayList<Pedido> lista = new ArrayList<>();
+    ArrayList<Pedido> lista = new ArrayList<>();
+    // Esta consulta une Pedidos con Persona (para el nombre del cliente)
+    // Usamos LEFT JOIN con productos por si un pedido aún no tiene detalles asignados
+    String sql = "SELECT p.Id_Pedido, per.IdPersona, per.Nombre, per.Apellidos, " +
+                 "p.Fecha_Hora_Pedido, p.Tipo_Entrega, p.Estado_Pedido, p.Total " +
+                 "FROM pedidos p " +
+                 "JOIN cliente c ON p.Id_Cliente_FK = c.Id_Cliente " +
+                 "JOIN persona per ON c.Id_Persona = per.IdPersona";
 
-        try (Connection con = ConexionDB.getConnection()) {
+    try (Connection con = ConexionDB.getConnection();
+         PreparedStatement ps = con.prepareStatement(sql);
+         ResultSet rs = ps.executeQuery()) {
 
-            String sql = "SELECT * FROM pedidos";
-            PreparedStatement ps = con.prepareStatement(sql); 
-            ResultSet rs = ps.executeQuery();
-
-            // Se recorren los resultados de la consulta y se almacenan en la colección "lista" 
-            // convirtiendo cada fila en un objeto de tipo "Pedido".
-            while(rs.next()) {
-                Pedido p = new Pedido();                                            // Se crea una nueva instancia del objeto Pedido
-                p.setId_Pedido(rs.getInt("Id_Pedido"));                 // Se asigna el valor de la columna 'id' al objeto
-                p.setId_Cliente_FK(rs.getInt("Id_Cliente_FK"));  // Se asigna el ID del cliente al objeto
-                p.setFecha_Hora_Pedido(rs.getString("Fecha_Hora_Pedido"));
-                p.setTipo_Entrega(rs.getString("Tipo_Entrega"));
-                p.setNotas_Cliente(rs.getString("Notas_Cliente"));
-                p.setTotal(rs.getInt("Total"));
-                p.setEstado_Pedido(rs.getString("Estado_Pedido"));
-                lista.add(p);                                                       // Se agrega el objeto configurado a la lista general
-
-                
-            }
-
-        } catch(SQLException e) {
-            e.printStackTrace();
+        while (rs.next()) {
+            Pedido p = new Pedido();
+            p.setId_Pedido(rs.getInt("Id_Pedido"));
+            
+            // 1. Sacamos el ID, el Nombre y el Apellido de la base de datos
+            int idPer = rs.getInt("IdPersona");
+            String nombreCompleto = idPer + " - " + rs.getString("Nombre") + " " + rs.getString("Apellidos");
+            
+            // 2. Lo guardamos todo junto en ese campo que ya tenías
+            p.setNotas_Cliente(nombreCompleto); 
+            
+            p.setFecha_Hora_Pedido(rs.getString("Fecha_Hora_Pedido"));
+            p.setTipo_Entrega(rs.getString("Tipo_Entrega"));
+            p.setEstado_Pedido(rs.getString("Estado_Pedido"));
+            p.setTotal(rs.getInt("Total"));
+            
+            lista.add(p);
         }
-
-        return lista;
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return lista;
+}
 
 
     // ACTUALIZAR PEDIDO

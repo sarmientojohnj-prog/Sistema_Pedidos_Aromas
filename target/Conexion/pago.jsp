@@ -25,7 +25,41 @@
 
     <div class="detalle-productos">
         <p><strong>Tus productos:</strong></p>
-        <div id="lista_resumen"></div>
+        <%
+            // Recuperamos la lista que el Servlet guardó en la sesión
+            String datosRaw = (String) session.getAttribute("carrito_datos"); 
+            if (datosRaw != null && !datosRaw.isEmpty()) {
+                try {
+                    // Limpiamos los corchetes y separamos cada producto
+                    String limpio = datosRaw.replace("[", "").replace("]", "").replace("},{", "}|{").replace("{", "").replace("}", "");
+                    String[] items = limpio.split("\\|");
+                    
+                    for (String item : items) {
+                        // Buscamos el nombre y el subtotal dentro del texto
+                        String[] partes = item.split(",");
+                        String nombre = "";
+                        String subtotal = "";
+                        String cantidad = "";
+
+                        for(String p : partes) {
+                            if(p.contains("nombre")) nombre = p.split(":")[1].replace("\"", "");
+                            if(p.contains("subtotal")) subtotal = p.split(":")[1];
+                            if(p.contains("cantidad")) cantidad = p.split(":")[1];
+                        }
+        %>
+                        <div class="fila-item">
+                            <span><%= cantidad %>x <%= nombre %></span>
+                            <span>$<%= subtotal %></span>
+                        </div>
+        <%
+                    }
+                } catch (Exception e) {
+                    out.println("Error al mostrar productos.");
+                }
+            } else {
+                out.println("<p>No hay productos en el resumen.</p>");
+            }
+        %>
     </div>
 
     <div class="total-grande">
@@ -46,30 +80,11 @@
         <button type="submit" class="btn-confirmar">Confirmar Pago Ahora</button>
 
         <div class="seccion-botones">
-            <a href="index.jsp" class="btn-volver">🏠 Volver al Inicio</a>
+            <a href="principal.jsp" class="btn-volver">🏠 Volver al Inicio</a>
             <a href="nuevo_pedido.jsp" class="link-cancelar">⬅️ Volver al pedido / Cancelar</a>
         </div>
     </form>
 </div>
-
-<script>
-    const datosRaw = '${sessionScope.listaProductos}';
-    if (datosRaw && datosRaw !== 'null') {
-        try {
-            const carrito = JSON.parse(datosRaw);
-            const contenedor = document.getElementById('lista_resumen');
-            carrito.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'fila-item';
-                div.innerHTML = '<span>' + item.cantidad + 'x ' + item.nombre + '</span>' +
-                                '<span>$' + item.subtotal + '</span>';
-                contenedor.appendChild(div);
-            });
-        } catch (e) {
-            console.error("Error al procesar el carrito", e);
-        }
-    }
-</script>
 
 </body>
 </html>

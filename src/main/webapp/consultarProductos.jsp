@@ -1,4 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
+<%
+    // BLOQUE DE SEGURIDAD
+    String rol = (String) session.getAttribute("rol");
+    if ("Repartidor".equals(rol)) {
+        response.sendRedirect("principal.jsp");
+        return;
+    }
+%>
+
 <html>
 <head>
     <title>Inventario de Productos</title>
@@ -47,10 +57,29 @@
     </form>
 </div>
 
-<div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: 15px;">
-    <a href="productos.jsp" style="text-decoration: none; background-color: #28a745; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; font-family: 'Segoe UI', sans-serif; transition: background 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        + Registrar Nuevo Producto
+<%
+    // Boton de regreso inteligente
+    String rolParaVolver = (String) session.getAttribute("rol");
+    String destino = "principal.jsp"; 
+
+    if ("Administrativo".equals(rolParaVolver)) {
+        destino = "admin_principal.jsp";
+    } else if ("Operativo".equals(rolParaVolver)) {
+        destino = "operativo_principal.jsp";
+    }
+%>
+
+<div style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 15px; font-family: 'Segoe UI', sans-serif;">
+    
+    <a href="<%= destino %>" style="text-decoration: none; background-color: #64748b; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold;">
+        ⬅ Volver al Panel
     </a>
+
+    <% if ("Administrativo".equals(rolParaVolver)) { %>
+        <a href="productos.jsp" style="text-decoration: none; background-color: #28a745; color: white; padding: 10px 20px; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            + Registrar Nuevo Producto
+        </a>
+    <% } %>
 </div>
 
     <table>
@@ -71,6 +100,7 @@
         %>
 
     </table> 
+
     <br>
     
 </body>

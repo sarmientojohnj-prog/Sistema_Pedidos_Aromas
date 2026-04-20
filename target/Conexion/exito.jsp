@@ -15,7 +15,7 @@
         <p>Tu orden ha sido procesada correctamente.</p>
         <p>Referencia: <strong>${refFinal}</strong></p>
         <br>
-        <a href="index.jsp" style="color: #2563eb;">Volver al inicio</a>
+        <a href="principal.jsp" style="color: #2563eb;">Volver al inicio</a>
     </div>
 </body>
 </html>
